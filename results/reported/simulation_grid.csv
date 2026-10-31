@@ -1,0 +1,13 @@
+n,phi,criterion,rmse_phi,rmse_v,boundary_percent
+512,0.6,CSE,0.208,1.071,21.4
+512,0.6,Refined grid,0.197,1.106,21.6
+512,0.6,Eight endpoints,0.209,1.089,23.6
+512,0.9,CSE,0.101,0.513,4.2
+512,0.9,Refined grid,0.089,0.472,1.2
+512,0.9,Eight endpoints,0.090,0.485,17.8
+1024,0.6,CSE,0.162,0.948,13.8
+1024,0.6,Refined grid,0.159,0.884,10.2
+1024,0.6,Eight endpoints,0.164,0.951,15.2
+1024,0.9,CSE,0.060,0.373,0.4
+1024,0.9,Refined grid,0.056,0.342,0.2
+1024,0.9,Eight endpoints,0.060,0.367,5.8

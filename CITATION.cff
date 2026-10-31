@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "Please cite the accompanying manuscript when using this code."
+title: "Copula-Spectral Estimation of Nonlinear Time-Series Models"
+type: software
+authors:
+  - family-names: Chen
+    given-names: Tianbo
+    affiliation: Anhui University
+  - family-names: Zhang
+    given-names: Ruidi
+    affiliation: University of Science and Technology of China
+repository-code: "https://github.com/tianbochen1/CSE"

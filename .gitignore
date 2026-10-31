@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+*.nbc
+*.nbi
+*.npz
+.Rhistory
+.RData
+data/
+figures/
+results/simulation/
+results/applications/
