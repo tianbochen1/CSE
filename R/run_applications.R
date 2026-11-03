@@ -1,4 +1,4 @@
-# Daily returns, rolling comparisons, and refitted SV model checks.
+# Daily returns, tie sensitivity, and refitted SV model checks.
 CORES <- 8L
 BOOTSTRAP_SAMPLES <- 499L
 APPLICATIONS <- c("EURUSD", "SP500")
@@ -19,16 +19,11 @@ INPUT <- setNames(lapply(APPLICATIONS,cse_load_application,cfg=DATA_CFG),APPLICA
 EVALUATION <- cse_eval_spec()
 Q_MULTIPLIER <- 16L
 F_MULTIPLIER <- 32L
-levels <- unique(c(EVALUATION$tau,unlist(lapply(c(512L,1024L,
-  vapply(INPUT,function(z)nrow(z$data),integer(1))),function(n)
+levels <- unique(c(EVALUATION$tau,unlist(lapply(vapply(INPUT,function(z)nrow(z$data),integer(1)),function(n)
     cse_application_spec(n,Q_MULTIPLIER,F_MULTIPLIER)$tau))))
 BANK <- cse_build_bank(levels,CFG)
 OUTPUT <- file.path(ROOT,"results","applications")
 dir.create(OUTPUT,recursive=TRUE,showWarnings=FALSE)
-FOLDS <- do.call(rbind,lapply(seq_len(4L),function(i) do.call(rbind,
-  lapply(c(512L,1024L),function(n) data.frame(fold=i,train_n=n,
-    train_start=1024L+(i-1L)*256L-n+1L,train_end=1024L+(i-1L)*256L,
-    test_start=1025L+(i-1L)*256L,test_end=1024L+i*256L)))))
 POINTS <- setNames(lapply(APPLICATIONS,function(a) {
   y<-INPUT[[a]]$data$y
   cse_fit_real(y,"CSE",cse_application_spec(length(y),Q_MULTIPLIER,F_MULTIPLIER),BANK,CFG)
@@ -36,25 +31,7 @@ POINTS <- setNames(lapply(APPLICATIONS,function(a) {
 for(a in APPLICATIONS) {
   write.csv(INPUT[[a]]$audit,file.path(OUTPUT,paste0(a,"_data_summary.csv")),row.names=FALSE)
   write.csv(cse_fit_row(POINTS[[a]]),file.path(OUTPUT,paste0(a,"_point_estimate.csv")),row.names=FALSE)
-  y<-INPUT[[a]]$data$y
-  rows<-list()
-  for(i in seq_len(nrow(FOLDS))) {
-    f<-FOLDS[i,];train<-y[f$train_start:f$train_end];test<-y[f$test_start:f$test_end]
-    spec<-cse_application_spec(length(train),Q_MULTIPLIER,F_MULTIPLIER)
-    pilot<-cse_fit_real(train,"CSE",spec,BANK,CFG)
-    for(method in c("CSE","TD2","TD16","QML","CPL","Independence")) {
-      fit<-if(method=="CSE")pilot else if(method=="Independence")NULL else
-        cse_fit_real(train,method,spec,BANK,CFG,extra=pilot$theta)
-      scores<-cse_validation_score(test,if(is.null(fit))NULL else fit$theta,EVALUATION,BANK)
-      rows[[length(rows)+1L]]<-data.frame(fold=f$fold,train_n=f$train_n,method=method,
-        phi=if(is.null(fit))NA_real_ else fit$theta[1],v=if(is.null(fit))NA_real_ else fit$theta[2],
-        boundary=if(is.null(fit))FALSE else fit$boundary,as.list(scores))
-    }
-  }
-  blocks<-do.call(rbind,rows)
-  summary<-aggregate(cbind(spectral_real,spectral_complex,lag_discrepancy,boundary)~train_n+method,blocks,mean)
-  write.csv(blocks,file.path(OUTPUT,paste0(a,"_window_blocks.csv")),row.names=FALSE)
-  write.csv(summary,file.path(OUTPUT,paste0(a,"_window_summary.csv")),row.names=FALSE)
+
 }
 # Ties are assessed descriptively for the rounded exchange-rate observations.
 y<-INPUT$EURUSD$data$y
@@ -104,3 +81,4 @@ checks<-data.frame(check=names(observed$statistics),statistic=as.numeric(observe
 write.csv(checks,file.path(OUTPUT,"SP500_model_checks.csv"),row.names=FALSE)
 write.csv(do.call(rbind,lapply(BOOT,`[[`,"fit")),file.path(OUTPUT,"SP500_bootstrap_estimates.csv"),row.names=FALSE)
 saveRDS(list(observed=observed,bootstrap=BOOT,settings=CFG),file.path(OUTPUT,"SP500_spectral_checks.rds"))
+
